@@ -22,21 +22,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
 {{#each tools}}
       {
         name: '{{name}}',
-        description: '{{description}}',
+        description: \`{{description}}\`,
         inputSchema: {
           type: 'object',
           properties: {
 {{#each parameters}}
-            {{name}}: {
+            "{{name}}": {
               type: '{{type}}',
-              description: '{{description}}'{{#if required}},
+              description: \`{{description}}\`{{#if required}},
               required: true{{/if}}
             },
 {{/each}}
 {{#if requestBody}}
             requestBody: {
               type: 'object',
-              description: '{{requestBody.description}}'{{#if requestBody.required}},
+              description: \`{{requestBody.description}}\`{{#if requestBody.required}},
               required: true{{/if}}
             }
 {{/if}}
@@ -68,8 +68,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const queryParams: any = {};
 {{#each parameters}}
 {{#if (eq in 'query')}}
-        if (args && args.{{name}} !== undefined) {
-          queryParams.{{name}} = args.{{name}};
+        if (args && args["{{name}}"] !== undefined) {
+          queryParams["{{name}}"] = args["{{name}}"];
         }
 {{/if}}
 {{/each}}
@@ -82,8 +82,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         let finalUrl = url;
 {{#each parameters}}
 {{#if (eq in 'path')}}
-        if (args && args.{{name}} !== undefined) {
-          finalUrl = finalUrl.replace('{{{name}}}', String(args.{{name}}));
+        if (args && args["{{name}}"] !== undefined) {
+          finalUrl = finalUrl.replace('{{{name}}}', String(args["{{name}}"]));
         }
 {{/if}}
 {{/each}}
@@ -93,8 +93,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const headers: any = {};
 {{#each parameters}}
 {{#if (eq in 'header')}}
-        if (args && args.{{name}} !== undefined) {
-          headers['{{name}}'] = args.{{name}};
+        if (args && args["{{name}}"] !== undefined) {
+          headers['{{name}}'] = args["{{name}}"];
         }
 {{/if}}
 {{/each}}
@@ -227,7 +227,7 @@ npm start
 {{#each tools}}
 ### {{name}}
 
-{{description}}
+\`{{description}}\`
 
 **Method:** {{method}}
 **Path:** {{path}}
@@ -235,12 +235,12 @@ npm start
 {{#if parameters}}
 **Parameters:**
 {{#each parameters}}
-- \`{{name}}\` ({{in}}) - {{description}}{{#if required}} *Required*{{/if}}
+- \`{{name}}\` ({{in}}) - \`{{description}}\`{{#if required}} *Required*{{/if}}
 {{/each}}
 {{/if}}
 
 {{#if requestBody}}
-**Request Body:** {{requestBody.description}}{{#if requestBody.required}} *Required*{{/if}}
+**Request Body:** \`{{requestBody.description}}\`{{#if requestBody.required}} *Required*{{/if}}
 {{/if}}
 
 {{/each}}

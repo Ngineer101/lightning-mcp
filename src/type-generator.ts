@@ -8,7 +8,7 @@ export function generateTypesFromSchema(schema: any, name: string): string {
   switch (schema.type) {
     case 'string':
       if (schema.enum) {
-        return schema.enum.map((e: string) => `'${e}'`).join(' | ');
+        return schema.enum.map((e: string) => `'${e.replace(/'/g, "\\'")}'`).join(' | ');
       }
       return 'string';
     case 'number':
@@ -27,7 +27,8 @@ export function generateTypesFromSchema(schema: any, name: string): string {
           .map(([key, prop]: [string, any]) => {
             const optional =
               schema.required && schema.required.includes(key) ? '' : '?';
-            return `  ${key}${optional}: ${generateTypesFromSchema(prop, key)}`;
+            const safeKey = key.includes('-') ? `"${key}"` : key;
+            return `  ${safeKey}${optional}: ${generateTypesFromSchema(prop, key)}`;
           })
           .join(';\n');
         return `{\n${props};\n}`;
@@ -61,7 +62,8 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
       types += `export interface ${operationName}Params {\n`;
       for (const param of endpoint.parameters) {
         const optional = param.required ? '' : '?';
-        types += `  ${param.name}${optional}: ${generateTypesFromSchema(param.schema, param.name)};\n`;
+        const safeParamName = param.name.includes('-') ? `"${param.name}"` : param.name;
+        types += `  ${safeParamName}${optional}: ${generateTypesFromSchema(param.schema, param.name)};\n`;
       }
       types += '}\n\n';
     }
@@ -74,7 +76,7 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
           jsonContent.schema,
           operationName + 'RequestBody',
         );
-        if (schemaType.startsWith('{')) {
+        if (schemaType.startsWith('{') && !schemaType.includes('Array<')) {
           types += `export interface ${operationName}RequestBody ${schemaType}\n\n`;
         } else {
           types += `export type ${operationName}RequestBody = ${schemaType};\n\n`;
@@ -91,7 +93,7 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
             jsonContent.schema,
             operationName + 'Response' + statusCode,
           );
-          if (schemaType.startsWith('{')) {
+          if (schemaType.startsWith('{') && !schemaType.includes('Array<')) {
             types += `export interface ${operationName}Response${statusCode} ${schemaType}\n\n`;
           } else {
             types += `export type ${operationName}Response${statusCode} = ${schemaType};\n\n`;

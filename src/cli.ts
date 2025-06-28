@@ -4,6 +4,8 @@ import { Command } from 'commander';
 import { generateMCPServer } from './generator';
 import * as fs from 'fs';
 import * as path from 'path';
+import https from 'node:https';
+import http from 'node:http';
 
 const program = new Command();
 
@@ -13,7 +15,7 @@ program
   .version('1.0.0');
 
 program
-  .requiredOption('--doc <path>', 'Path to Swagger/OpenAPI JSON document')
+  .requiredOption('--doc <path>', 'Path or URL to Swagger/OpenAPI JSON document')
   .option(
     '--output <path>',
     'Output directory for generated MCP server',
@@ -24,12 +26,18 @@ program
     try {
       const { doc, output, config } = options;
 
-      if (!fs.existsSync(doc)) {
-        console.error(`Error: Swagger document not found at ${doc}`);
-        process.exit(1);
-      }
+      let swaggerDoc: any;
 
-      const swaggerDoc = JSON.parse(fs.readFileSync(doc, 'utf8'));
+      if (doc.startsWith('http://') || doc.startsWith('https://')) {
+        console.log(`Fetching Swagger document from ${doc}...`);
+        swaggerDoc = await fetchSwaggerDoc(doc);
+      } else {
+        if (!fs.existsSync(doc)) {
+          console.error(`Error: Swagger document not found at ${doc}`);
+          process.exit(1);
+        }
+        swaggerDoc = JSON.parse(fs.readFileSync(doc, 'utf8'));
+      }
 
       console.log(`Generating MCP server from ${doc}...`);
       await generateMCPServer(swaggerDoc, output, config);
@@ -41,5 +49,34 @@ program
       process.exit(1);
     }
   });
+
+async function fetchSwaggerDoc(url: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https://') ? https : http;
+    
+    client.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+        return;
+      }
+      
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          const jsonData = JSON.parse(data);
+          resolve(jsonData);
+        } catch (error) {
+          reject(new Error(`Invalid JSON response: ${error}`));
+        }
+      });
+    }).on('error', (error) => {
+      reject(new Error(`Request failed: ${error.message}`));
+    });
+  });
+}
 
 program.parse();
