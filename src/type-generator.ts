@@ -8,7 +8,10 @@ export function generateTypesFromSchema(schema: any, name: string): string {
   switch (schema.type) {
     case 'string':
       if (schema.enum) {
-        return schema.enum.map((e: string) => `'${e.replace(/'/g, "\\'")}'`).join(' | ');
+        return schema.enum.map((e: string) => {
+          // Use JSON.stringify to handle all special characters properly
+          return JSON.stringify(e);
+        }).join(' | ');
       }
       return 'string';
     case 'number':
@@ -22,7 +25,7 @@ export function generateTypesFromSchema(schema: any, name: string): string {
       }
       return 'any[]';
     case 'object':
-      if (schema.properties) {
+      if (schema.properties && Object.keys(schema.properties).length > 0) {
         const props = Object.entries(schema.properties)
           .map(([key, prop]: [string, any]) => {
             const optional =
@@ -48,14 +51,24 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
 
   // Generate schema types
   for (const [schemaName, schema] of Object.entries(parsedAPI.schemas)) {
-    types += `export interface ${schemaName} ${generateTypesFromSchema(schema, schemaName)}\n\n`;
+    const schemaType = generateTypesFromSchema(schema, schemaName);
+    // Use interface for non-empty objects, type for everything else
+    if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
+      types += `export interface ${schemaName} ${schemaType}\n\n`;
+    } else {
+      types += `export type ${schemaName} = ${schemaType};\n\n`;
+    }
   }
 
   // Generate endpoint parameter and response types
   for (const endpoint of parsedAPI.endpoints) {
-    const operationName =
-      endpoint.operationId.charAt(0).toUpperCase() +
-      endpoint.operationId.slice(1);
+    // Sanitize operation ID by replacing hyphens and spaces with underscores, then convert to PascalCase
+    const sanitizedOperationId = endpoint.operationId
+      .replace(/[-\s]+/g, '_')  // Replace hyphens and spaces with underscores
+      .replace(/[^a-zA-Z0-9_]/g, '_')  // Replace any other special characters with underscores
+      .replace(/_+/g, '_')  // Replace multiple underscores with single underscore
+      .replace(/^_|_$/g, '');  // Remove leading/trailing underscores
+    const operationName = sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1);
 
     // Parameters type
     if (endpoint.parameters.length > 0) {
@@ -76,7 +89,7 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
           jsonContent.schema,
           operationName + 'RequestBody',
         );
-        if (schemaType.startsWith('{') && !schemaType.includes('Array<')) {
+        if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
           types += `export interface ${operationName}RequestBody ${schemaType}\n\n`;
         } else {
           types += `export type ${operationName}RequestBody = ${schemaType};\n\n`;
@@ -93,7 +106,7 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
             jsonContent.schema,
             operationName + 'Response' + statusCode,
           );
-          if (schemaType.startsWith('{') && !schemaType.includes('Array<')) {
+          if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
             types += `export interface ${operationName}Response${statusCode} ${schemaType}\n\n`;
           } else {
             types += `export type ${operationName}Response${statusCode} = ${schemaType};\n\n`;
