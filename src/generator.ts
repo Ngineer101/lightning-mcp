@@ -147,19 +147,33 @@ export async function generateMCPServer(
   console.log(`Generated MCP server with ${tools.length} tools`);
   tools.forEach((tool) => console.log(`  - ${tool.name}: ${tool.description}`));
 
-  // Build the generated app to ensure it's working
-  console.log('Building generated MCP server...');
+  // Install dependencies and build the generated app to ensure it's working
+  console.log('Installing dependencies...');
   const { spawn } = require('child_process');
-  const buildProcess = spawn('npm', ['run', 'build'], { 
+  const installProcess = spawn('npm', ['install'], { 
     cwd: outputDir, 
     stdio: 'inherit' 
   });
   
-  buildProcess.on('close', (code: number) => {
-    if (code === 0) {
-      console.log('✅ Build completed successfully');
+  installProcess.on('close', (installCode: number) => {
+    if (installCode === 0) {
+      console.log('✅ Dependencies installed successfully');
+      console.log('Building generated MCP server...');
+      
+      const buildProcess = spawn('npm', ['run', 'build'], { 
+        cwd: outputDir, 
+        stdio: 'inherit' 
+      });
+      
+      buildProcess.on('close', (buildCode: number) => {
+        if (buildCode === 0) {
+          console.log('✅ Build completed successfully');
+        } else {
+          console.error(`❌ Build failed with exit code ${buildCode}`);
+        }
+      });
     } else {
-      console.error(`❌ Build failed with exit code ${code}`);
+      console.error(`❌ Dependency installation failed with exit code ${installCode}`);
     }
   });
 }
