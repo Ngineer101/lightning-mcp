@@ -1,4 +1,4 @@
-# Lightning MCP
+# MCP Runner
 
 A CLI tool that generates a Model Context Protocol (MCP) server from a Swagger/OpenAPI document.
 
@@ -141,7 +141,7 @@ The above endpoint becomes an MCP tool named `getUserById` with:
 ### Project Structure
 
 ```
-lightning-mcp/
+mcpr/
 ├── src/
 │   ├── cli.ts           # CLI entry point
 │   ├── parser.ts        # Swagger document parser

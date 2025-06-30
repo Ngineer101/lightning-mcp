@@ -10,9 +10,9 @@ import http from 'node:http';
 const program = new Command();
 
 program
-  .name('lightning-mcp')
+  .name('mcpr')
   .description('Generate MCP servers from Swagger/OpenAPI documents')
-  .version('1.0.0');
+  .version('0.0.1');
 
 program
   .requiredOption('--doc <path>', 'Path or URL to Swagger/OpenAPI JSON document')

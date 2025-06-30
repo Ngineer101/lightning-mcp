@@ -1,10 +1,10 @@
 {
-  "name": "lightning-mcp",
-  "version": "1.0.0",
+  "name": "mcpr",
+  "version": "0.0.1",
   "description": "CLI tool to generate MCP servers from Swagger/OpenAPI documents",
   "main": "dist/index.js",
   "bin": {
-    "lightning-mcp": "dist/cli.js"
+    "mcpr": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -14,14 +14,17 @@
     "format": "biome format --write",
     "typecheck": "tsc --noEmit"
   },
+  "repository": "https://github.com/Ngineer101/mcpr",
+  "homepage": "https://github.com/Ngineer101/mcpr#readme",
   "keywords": [
     "mcp",
+    "modelcontextprotocol",
     "swagger",
     "openapi",
     "cli",
     "typescript"
   ],
-  "author": "",
+  "author": "Ngineer101",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.13.2",
