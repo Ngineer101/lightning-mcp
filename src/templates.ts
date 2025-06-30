@@ -1,4 +1,6 @@
-export function createMCPServerTemplate(config: any) {
+import type { TemplateConfig } from './config';
+
+export function createMCPServerTemplate(config: TemplateConfig): string {
   return `#!/usr/bin/env node
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -16,7 +18,7 @@ const server = new Server(
   }
 );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
+server.setRequestHandler(ListToolsRequestSchema, async (): Promise<any> => {
   return {
     tools: [
 {{#each tools}}
@@ -48,7 +50,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   };
 });
 
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
+server.setRequestHandler(CallToolRequestSchema, async (request: any): Promise<any> => {
   const { name, arguments: args = {} } = request.params;
 
   try {
@@ -146,7 +148,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-async function main() {
+async function main(): Promise<void> {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error('{{apiTitle}} MCP server running on stdio');
@@ -156,7 +158,7 @@ main().catch(console.error);
 `;
 }
 
-export function createPackageJsonTemplate(config: any) {
+export function createPackageJsonTemplate(config: TemplateConfig): string {
   return `{
   "name": "{{packageName}}",
   "version": "1.0.0",
@@ -183,7 +185,7 @@ export function createPackageJsonTemplate(config: any) {
 }`;
 }
 
-export function createTsConfigTemplate(config: any) {
+export function createTsConfigTemplate(config: TemplateConfig): string {
   return `{
   "compilerOptions": {
     "target": "${config.constants.defaultNodeTarget}",
@@ -204,7 +206,7 @@ export function createTsConfigTemplate(config: any) {
 }`;
 }
 
-export function createReadmeTemplate() {
+export function createReadmeTemplate(): string {
   return `# {{apiTitle}} MCP Server
 
 This is a Model Context Protocol (MCP) server generated from the {{apiTitle}} API specification.

@@ -8,10 +8,12 @@ export function generateTypesFromSchema(schema: any, name: string): string {
   switch (schema.type) {
     case 'string':
       if (schema.enum) {
-        return schema.enum.map((e: string) => {
-          // Use JSON.stringify to handle all special characters properly
-          return JSON.stringify(e);
-        }).join(' | ');
+        return schema.enum
+          .map((e: string) => {
+            // Use JSON.stringify to handle all special characters properly
+            return JSON.stringify(e);
+          })
+          .join(' | ');
       }
       return 'string';
     case 'number':
@@ -53,7 +55,11 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
   for (const [schemaName, schema] of Object.entries(parsedAPI.schemas)) {
     const schemaType = generateTypesFromSchema(schema, schemaName);
     // Use interface for non-empty objects, type for everything else
-    if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
+    if (
+      schemaType.startsWith('{') &&
+      !schemaType.includes('Array<') &&
+      schemaType !== 'Record<string, any>'
+    ) {
       types += `export interface ${schemaName} ${schemaType}\n\n`;
     } else {
       types += `export type ${schemaName} = ${schemaType};\n\n`;
@@ -64,18 +70,22 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
   for (const endpoint of parsedAPI.endpoints) {
     // Sanitize operation ID by replacing hyphens and spaces with underscores, then convert to PascalCase
     const sanitizedOperationId = endpoint.operationId
-      .replace(/[-\s]+/g, '_')  // Replace hyphens and spaces with underscores
-      .replace(/[^a-zA-Z0-9_]/g, '_')  // Replace any other special characters with underscores
-      .replace(/_+/g, '_')  // Replace multiple underscores with single underscore
-      .replace(/^_|_$/g, '');  // Remove leading/trailing underscores
-    const operationName = sanitizedOperationId.charAt(0).toUpperCase() + sanitizedOperationId.slice(1);
+      .replace(/[-\s]+/g, '_') // Replace hyphens and spaces with underscores
+      .replace(/[^a-zA-Z0-9_]/g, '_') // Replace any other special characters with underscores
+      .replace(/_+/g, '_') // Replace multiple underscores with single underscore
+      .replace(/^_|_$/g, ''); // Remove leading/trailing underscores
+    const operationName =
+      sanitizedOperationId.charAt(0).toUpperCase() +
+      sanitizedOperationId.slice(1);
 
     // Parameters type
     if (endpoint.parameters.length > 0) {
       types += `export interface ${operationName}Params {\n`;
       for (const param of endpoint.parameters) {
         const optional = param.required ? '' : '?';
-        const safeParamName = param.name.includes('-') ? `"${param.name}"` : param.name;
+        const safeParamName = param.name.includes('-')
+          ? `"${param.name}"`
+          : param.name;
         types += `  ${safeParamName}${optional}: ${generateTypesFromSchema(param.schema, param.name)};\n`;
       }
       types += '}\n\n';
@@ -89,7 +99,11 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
           jsonContent.schema,
           operationName + 'RequestBody',
         );
-        if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
+        if (
+          schemaType.startsWith('{') &&
+          !schemaType.includes('Array<') &&
+          schemaType !== 'Record<string, any>'
+        ) {
           types += `export interface ${operationName}RequestBody ${schemaType}\n\n`;
         } else {
           types += `export type ${operationName}RequestBody = ${schemaType};\n\n`;
@@ -106,7 +120,11 @@ export function generateAPITypes(parsedAPI: ParsedAPI): string {
             jsonContent.schema,
             operationName + 'Response' + statusCode,
           );
-          if (schemaType.startsWith('{') && !schemaType.includes('Array<') && schemaType !== 'Record<string, any>') {
+          if (
+            schemaType.startsWith('{') &&
+            !schemaType.includes('Array<') &&
+            schemaType !== 'Record<string, any>'
+          ) {
             types += `export interface ${operationName}Response${statusCode} ${schemaType}\n\n`;
           } else {
             types += `export type ${operationName}Response${statusCode} = ${schemaType};\n\n`;

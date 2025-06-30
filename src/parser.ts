@@ -16,19 +16,19 @@ export interface Parameter {
   name: string;
   in: 'query' | 'path' | 'header' | 'cookie';
   required: boolean;
-  schema: any;
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject | undefined;
   description?: string;
 }
 
 export interface RequestBody {
   description?: string;
   required: boolean;
-  content: any;
+  content: Record<string, OpenAPIV3.MediaTypeObject>;
 }
 
 export interface Response {
   description: string;
-  content?: any;
+  content?: Record<string, OpenAPIV3.MediaTypeObject>;
 }
 
 export interface ParsedAPI {
@@ -39,10 +39,12 @@ export interface ParsedAPI {
   };
   servers: Array<{ url: string; description?: string }>;
   endpoints: ParsedEndpoint[];
-  schemas: Record<string, any>;
+  schemas: Record<string, OpenAPIV3.SchemaObject | OpenAPIV3.ReferenceObject>;
 }
 
-export async function parseSwaggerDoc(swaggerDoc: any): Promise<ParsedAPI> {
+export async function parseSwaggerDoc(
+  swaggerDoc: Record<string, unknown>,
+): Promise<ParsedAPI> {
   const api = (await SwaggerParser.parse(swaggerDoc)) as OpenAPIV3.Document;
 
   const endpoints: ParsedEndpoint[] = [];
@@ -67,7 +69,7 @@ export async function parseSwaggerDoc(swaggerDoc: any): Promise<ParsedAPI> {
           const p = param as OpenAPIV3.ParameterObject;
           parameters.push({
             name: p.name,
-            in: p.in as any,
+            in: p.in as 'query' | 'path' | 'header' | 'cookie',
             required: p.required || false,
             schema: p.schema,
             description: p.description,

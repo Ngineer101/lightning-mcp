@@ -15,7 +15,10 @@ program
   .version('0.0.1');
 
 program
-  .requiredOption('--doc <path>', 'Path or URL to Swagger/OpenAPI JSON document')
+  .requiredOption(
+    '--doc <path>',
+    'Path or URL to Swagger/OpenAPI JSON document',
+  )
   .option(
     '--output <path>',
     'Output directory for generated MCP server',
@@ -26,7 +29,7 @@ program
     try {
       const { doc, output, config } = options;
 
-      let swaggerDoc: any;
+      let swaggerDoc: Record<string, unknown>;
 
       if (doc.startsWith('http://') || doc.startsWith('https://')) {
         console.log(`Fetching Swagger document from ${doc}...`);
@@ -50,32 +53,34 @@ program
     }
   });
 
-async function fetchSwaggerDoc(url: string): Promise<any> {
+async function fetchSwaggerDoc(url: string): Promise<Record<string, unknown>> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https://') ? https : http;
-    
-    client.get(url, (res) => {
-      if (res.statusCode !== 200) {
-        reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
-        return;
-      }
-      
-      let data = '';
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-      
-      res.on('end', () => {
-        try {
-          const jsonData = JSON.parse(data);
-          resolve(jsonData);
-        } catch (error) {
-          reject(new Error(`Invalid JSON response: ${error}`));
+
+    client
+      .get(url, (res) => {
+        if (res.statusCode !== 200) {
+          reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
+          return;
         }
+
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+
+        res.on('end', () => {
+          try {
+            const jsonData = JSON.parse(data);
+            resolve(jsonData);
+          } catch (error) {
+            reject(new Error(`Invalid JSON response: ${error}`));
+          }
+        });
+      })
+      .on('error', (error) => {
+        reject(new Error(`Request failed: ${error.message}`));
       });
-    }).on('error', (error) => {
-      reject(new Error(`Request failed: ${error.message}`));
-    });
   });
 }
 

@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Handlebars from 'handlebars';
-import { parseSwaggerDoc, ParsedAPI, ParsedEndpoint } from './parser';
+import { parseSwaggerDoc, ParsedEndpoint } from './parser';
 import { generateAPITypes, writeTypesToFile } from './type-generator';
 import {
   createMCPServerTemplate,
@@ -10,9 +10,10 @@ import {
   createReadmeTemplate,
 } from './templates';
 import { getTemplateConfig } from './config';
+import { spawn } from 'child_process';
 
 // Register Handlebars helpers
-Handlebars.registerHelper('eq', function (a, b) {
+Handlebars.registerHelper('eq', (a, b) => {
   return a === b;
 });
 
@@ -34,7 +35,9 @@ interface MCPTool {
   };
 }
 
-function convertSchemaTypeToSimpleType(schema: any): string {
+function convertSchemaTypeToSimpleType(
+  schema: Record<string, unknown> | undefined,
+): string {
   if (!schema) return 'string';
 
   switch (schema.type) {
@@ -63,7 +66,9 @@ function createMCPToolsFromEndpoints(endpoints: ParsedEndpoint[]): MCPTool[] {
     path: endpoint.path,
     parameters: endpoint.parameters.map((param) => ({
       name: param.name,
-      type: convertSchemaTypeToSimpleType(param.schema),
+      type: convertSchemaTypeToSimpleType(
+        param.schema as Record<string, unknown>,
+      ),
       description: param.description || `${param.name} parameter`,
       required: param.required,
       in: param.in,
@@ -78,7 +83,7 @@ function createMCPToolsFromEndpoints(endpoints: ParsedEndpoint[]): MCPTool[] {
 }
 
 export async function generateMCPServer(
-  swaggerDoc: any,
+  swaggerDoc: Record<string, unknown>,
   outputDir: string,
   configPath?: string,
 ): Promise<void> {
@@ -149,22 +154,21 @@ export async function generateMCPServer(
 
   // Install dependencies and build the generated app to ensure it's working
   console.log('Installing dependencies...');
-  const { spawn } = require('child_process');
-  const installProcess = spawn('npm', ['install'], { 
-    cwd: outputDir, 
-    stdio: 'inherit' 
+  const installProcess = spawn('npm', ['install'], {
+    cwd: outputDir,
+    stdio: 'inherit',
   });
-  
+
   installProcess.on('close', (installCode: number) => {
     if (installCode === 0) {
       console.log('✅ Dependencies installed successfully');
       console.log('Building generated MCP server...');
-      
-      const buildProcess = spawn('npm', ['run', 'build'], { 
-        cwd: outputDir, 
-        stdio: 'inherit' 
+
+      const buildProcess = spawn('npm', ['run', 'build'], {
+        cwd: outputDir,
+        stdio: 'inherit',
       });
-      
+
       buildProcess.on('close', (buildCode: number) => {
         if (buildCode === 0) {
           console.log('✅ Build completed successfully');
@@ -173,7 +177,9 @@ export async function generateMCPServer(
         }
       });
     } else {
-      console.error(`❌ Dependency installation failed with exit code ${installCode}`);
+      console.error(
+        `❌ Dependency installation failed with exit code ${installCode}`,
+      );
     }
   });
 }

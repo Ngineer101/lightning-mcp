@@ -97,7 +97,7 @@ export function getVersionsFromCurrentProject(): Partial<
 
 function mergeConfig(
   defaultConfig: TemplateConfig,
-  userConfig: any,
+  userConfig: Partial<TemplateConfig>,
 ): TemplateConfig {
   return {
     dependencies: { ...defaultConfig.dependencies, ...userConfig.dependencies },
@@ -120,7 +120,7 @@ export function getTemplateConfig(configPath?: string): TemplateConfig {
       ...baseConfig.dependencies,
       ...(Object.fromEntries(
         Object.entries(projectVersions).filter(
-          ([_, value]) => value !== undefined,
+          ([, value]) => value !== undefined,
         ),
       ) as TemplateConfig['dependencies']),
     },
