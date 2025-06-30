@@ -10,8 +10,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,18 +33,3 @@ jobs:
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Tag release
-        if: github.event.action == 'created'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const tag = `v${process.env.GITHUB_REF.split('/').pop()}`
-            const sha = context.payload.release.target_commitish
-            
-            github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/tags/${tag}`,
-              sha: sha
-            })
