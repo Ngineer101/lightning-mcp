@@ -172,3 +172,4 @@ lightning-mcp/
 - Add optional parameter for initializing a git repository at the output directory
 - Add optional parameter for specifying the transport type (stdio, http, etc.)
 - Add tests for the CLI
+- Add support for authentication (e.g. API keys, OAuth)
