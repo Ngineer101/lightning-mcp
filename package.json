@@ -1,5 +1,5 @@
 {
-  "name": "mcpr",
+  "name": "@ngineer101/mcpr",
   "version": "0.0.1",
   "description": "CLI tool to generate MCP servers from Swagger/OpenAPI documents",
   "main": "dist/index.js",
