@@ -26,6 +26,11 @@ jobs:
       - name: Run linter
         run: npm run lint
 
+      - name: Update package version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          npm version $VERSION --no-git-tag-version
+
       - name: Build package
         run: npm run build
 
